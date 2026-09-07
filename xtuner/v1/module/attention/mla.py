@@ -58,6 +58,7 @@ class MLAConfig(BaseModel):
     qk_rope_head_dim: int
     qk_nope_head_dim: int
     v_head_dim: int
+    rms_norm_eps: float = 1e-6
 
     def build(
         self,
@@ -185,6 +186,7 @@ class MultiLatentAttention(nn.Module):
         qk_nope_head_dim: int,
         v_head_dim: int,
         q_lora_rank: int | None = None,
+        rms_norm_eps: float = 1e-6,
         dropout: float = 0.0,
         # casual: bool = True,
         qkv_bias: bool = False,
@@ -232,7 +234,7 @@ class MultiLatentAttention(nn.Module):
                 bias=self.qkv_bias,
                 float8_cfg=self.float8_cfg,
             )
-            self.q_a_layernorm = RMSNorm(self.q_lora_rank)
+            self.q_a_layernorm = RMSNorm(self.q_lora_rank, eps=rms_norm_eps)
             self.q_b_proj = build_linear(
                 self.q_lora_rank,
                 self.num_attention_heads * self.q_head_dim,
@@ -246,7 +248,7 @@ class MultiLatentAttention(nn.Module):
             bias=self.qkv_bias,
             float8_cfg=self.float8_cfg,
         )
-        self.kv_a_layernorm = RMSNorm(self.kv_lora_rank)
+        self.kv_a_layernorm = RMSNorm(self.kv_lora_rank, eps=rms_norm_eps)
         self.kv_b_proj = build_linear(
             self.kv_lora_rank,
             self.num_attention_heads * (self.q_head_dim - self.qk_rope_head_dim + self.v_head_dim),

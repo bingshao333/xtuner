@@ -8,6 +8,7 @@ from .hybrid import HybridChatTemplate
 current_date = datetime.now().strftime("%Y-%m-%d")
 
 CHAT_TEMPLATE_MAP = {
+    "glm4.7": HybridChatTemplate(stop_words=["<|endoftext|>", "<|observation|>"], sep=""),
     "glm5.2": HybridChatTemplate(stop_words=["<|endoftext|>", "<|observation|>"], sep=""),
     "qwen3.5-vl": HybridChatTemplate(
         image_start_token="<|vision_start|>",
