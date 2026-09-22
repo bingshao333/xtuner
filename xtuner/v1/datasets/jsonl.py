@@ -627,6 +627,8 @@ class JsonlDataset(torch.utils.data.Dataset[T | CacheItem]):
         tokenized = tokenize_fn(json.loads(line))
         if isinstance(tokenized, dict):
             res = {"num_tokens": tokenized["num_tokens"], "proxy_attn_flops": tokenized["proxy_attn_flops"]}
+            if "original_num_tokens" in tokenized:
+                res["original_num_tokens"] = tokenized["original_num_tokens"]
             if "chunks" in tokenized:
                 tokenized = cast(dict[str, Any], tokenized)
                 res["chunks"] = tokenized["chunks"]
@@ -716,6 +718,11 @@ class JsonlDataset(torch.utils.data.Dataset[T | CacheItem]):
                 "num_tokens": np.array([data["num_tokens"] for data in tokenized]),
                 "proxy_attn_flops": np.array([data["proxy_attn_flops"] for data in tokenized]),
             }
+            if getattr(self.tokenize_fn, "record_token_stats", False):
+                # Keep metadata keys consistent across ranks; -1 denotes unknown length.
+                serialized_tokenized["original_num_tokens"] = np.array(
+                    [data.get("original_num_tokens", -1) for data in tokenized], dtype=np.int64
+                )
 
         if dist.is_initialized():
             # TODO:
